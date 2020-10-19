@@ -12,8 +12,7 @@ app.use(express.json());
 app.post('/api/gethtml', (req, res) => {
     let phrase = req.body.phrase,
         vendorCode = req.body.vendorCode,
-        result = [],
-        vendors = [];
+        result = [];
     
     const phrasesArray = phrase.split(/\n/);
 
@@ -24,11 +23,10 @@ app.post('/api/gethtml', (req, res) => {
                 request(searchUrl, function(error, response, html) {
                     if (!error && response.statusCode == 200) {
                         let $ = cheerio.load(html);
-                        if (!vendors.length) {
-                            $('.i-dtList').each(function(i, el) {
-                                vendors.push($(this).attr('data-catalogercod1s'));
-                            })
-                        }
+                        let vendors = [];
+                        $('.i-dtList').each(function(i, el) {
+                            vendors.push($(this).attr('data-catalogercod1s'));
+                        })
                         let hasInList = false;
                         vendors.forEach((item, i) => {
                             if(item == vendorCode) {
