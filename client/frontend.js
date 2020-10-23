@@ -26,8 +26,8 @@ new Vue({
       async getHtml() {
           this.result = [];
           this.loading = true;
-          const {...formData} = this.form;
-          const data = await request('/api/gethtml','POST', {...formData});
+          const formData = this.form;
+          const data = await request('/api/gethtml','POST', formData);
           this.result = data;
           this.loading = false;
 
