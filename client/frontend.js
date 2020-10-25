@@ -15,7 +15,7 @@ new Vue({
     data() {
         return {
             form: {
-                phrase: '',
+                phrases: '',
                 vendorCode: ''
             },
             result: [],
@@ -27,7 +27,7 @@ new Vue({
           this.result = [];
           this.loading = true;
           const formData = this.form;
-          const data = await request('/api/gethtml','POST', formData);
+          const data = await request('/api/parse','POST', formData);
           this.result = data;
           this.loading = false;
 
