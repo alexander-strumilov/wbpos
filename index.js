@@ -6,7 +6,6 @@ const cheerio = require('cheerio')
 const url = "https://www.wildberries.ru/catalog/0/search.aspx?search="
 const axios = require('axios')
 
-
 app.use(express.json());
 
 app.post('/api/parse', (req, res) => {
