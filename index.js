@@ -5,9 +5,6 @@ const path = require('path')
 const cheerio = require('cheerio')
 const url = "https://www.wildberries.ru/catalog/0/search.aspx?search="
 const axios = require('axios')
-const {
-    response
-} = require('express')
 
 app.use(express.json());
 
