@@ -5,6 +5,9 @@ const path = require('path')
 const cheerio = require('cheerio')
 const url = "https://www.wildberries.ru/catalog/0/search.aspx?search="
 const axios = require('axios')
+const {
+    response
+} = require('express')
 
 app.use(express.json());
 
@@ -14,7 +17,6 @@ app.post('/api/parse', (req, res) => {
         result = [];
 
     const phrasesList = phrases.split(/\n/);
-    console.log('phrasesList :>> ', phrases);
 
     async function requestData(arr) {
         if (arr.length) {
@@ -28,11 +30,27 @@ app.post('/api/parse', (req, res) => {
     requestData(phrasesList)
 
     async function parseUrl(url, phrase, code, result) {
-        //Первые 10 страниц
-        const paginationLinksNumbers = [1,2,3,4,5,6,7,8,9,10];
+
         let vendors = [];
-        //Запрос всех
-        for (const number of paginationLinksNumbers) {
+        // Проверка страниц пагинации (максимум: 7)
+        const pagination = await axios.get(url + encodeURI(phrase)).then(response => {
+            if (response.status === 200) {
+                const html = response.data;
+                const $ = cheerio.load(html);
+                let linkNumbers = [];
+                if ($('.pagination-item').length == 0) {
+                    linkNumbers.push(1);
+                } else {
+                    $('.pagination-item').each(function (i, el) {
+                        linkNumbers.push(i + 1);
+                    })
+                }
+                return linkNumbers;
+            }
+        })
+        //Запрос всех артикулов по порядку
+        for (const number of pagination) {
+
             const searchUrl = url + encodeURI(phrase) + '&page=' + number;
 
             const data = await axios.get(searchUrl).then(response => {
@@ -44,17 +62,24 @@ app.post('/api/parse', (req, res) => {
                     })
                 }
             }, (error) => console.log(error));
+
         }
         //Проверка содержит ли массив артикулов нужный
         let hasInList = false;
         vendors.forEach((item, i) => {
-            if(item == code) {
+            if (item == code) {
                 hasInList = true;
-                result.push({phrase: phrase, position: i + 1});
-            } 
+                result.push({
+                    phrase: phrase,
+                    position: i + 1
+                });
+            }
         })
-        if(!hasInList) {
-            result.push({phrase: phrase, position: '-'});
+        if (!hasInList) {
+            result.push({
+                phrase: phrase,
+                position: '-'
+            });
         }
         console.log('result:', result);
     }
