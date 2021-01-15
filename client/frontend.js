@@ -23,15 +23,18 @@ new Vue({
         }
     },
     methods: {
-      async getHtml() {
+      async getData() {
           this.result = [];
           this.loading = true;
           const formData = this.form;
           const data = await request('/api/parse','POST', formData);
+          console.log('data :>> ', data);
           this.result = data;
           this.loading = false;
-
-      } 
+      }
+    },
+    async mounted() {
+        
     }
 })
 

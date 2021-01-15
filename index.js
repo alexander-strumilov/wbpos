@@ -1,19 +1,36 @@
 const express = require('express')
 const app = express()
-const port = 3000
+const port = 8080
 const path = require('path')
 const cheerio = require('cheerio')
 const url = "https://www.wildberries.ru/catalog/0/search.aspx?search="
-const axios = require('axios')
+const HttpsProxyAgent = require("https-proxy-agent")
+const httpsAgent = new HttpsProxyAgent({host: "45.128.184.27", port: "65233", auth: "webactives:N4h6ArL"})
+let axios = require('axios')
+
+axios = axios.create({httpsAgent});
 
 app.use(express.json());
 
 app.post('/api/parse', (req, res) => {
     let phrases = req.body.phrases,
         vendorCode = req.body.vendorCode,
-        result = [];
+        result = {
+            positions: []
+        };
 
     const phrasesList = phrases.split(/\n/);
+
+    console.log('phrasesList :>> ', phrasesList);
+
+
+
+    async function getProductInfo() {
+        const product = await parseProduct(vendorCode).then(data => data);
+        result.product = product;
+    }
+
+    getProductInfo();
 
     async function requestData(arr) {
         if (arr.length) {
@@ -24,6 +41,7 @@ app.post('/api/parse', (req, res) => {
             res.status(200).json(result);
         }
     }
+
     requestData(phrasesList)
 
     async function parseUrl(url, phrase, code, result) {
@@ -54,7 +72,7 @@ app.post('/api/parse', (req, res) => {
                 if (response.status === 200) {
                     const html = response.data;
                     const $ = cheerio.load(html);
-                    $('.i-dtList').each(function (i, el) {
+                    $('.catalog_main_table .j-card-item').each(function (i, el) {
                         vendors.push($(this).attr('data-catalogercod1s'));
                     })
                 }
@@ -66,20 +84,40 @@ app.post('/api/parse', (req, res) => {
         vendors.forEach((item, i) => {
             if (item == code) {
                 hasInList = true;
-                result.push({
+                result.positions.push({
                     phrase: phrase,
-                    position: i + 1
+                    position: i + 1,
+                    link: url + encodeURI(phrase)
                 });
             }
         })
         if (!hasInList) {
-            result.push({
+            result.positions.push({
                 phrase: phrase,
-                position: '-'
+                position: '-',
+                link: url + encodeURI(phrase)
             });
         }
         console.log('result:', result);
     }
+
+    async function parseProduct(vendor) {
+        const url = `https://www.wildberries.ru/catalog/${vendor}/detail.aspx`;
+        const product = await axios.get(url).then(response => {
+            if (response.status === 200) {
+                const html = response.data;
+                const $ = cheerio.load(html);
+                return {
+                    url: url,
+                    title: $('span.name').text(),
+                    price: $('span.final-cost').text(),
+                    imageUrl: 'https://' + $('img.MagicZoomFullSizeImage').attr('src')
+                }
+            }
+        })
+        return product;
+    }
+
 })
 
 app.use(express.static(path.resolve(__dirname, 'client')))

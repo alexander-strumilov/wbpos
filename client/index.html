@@ -24,6 +24,9 @@
             text-align: center;
             padding: 30px;
         }
+        .app-title {
+            font-weight: bold;
+        }
         .app-content {
             margin-top: 30px;
         }
@@ -40,10 +43,26 @@
             border-radius: 5%;
             box-shadow: 0px 0px 0px 0px #5B5B5B;
             transition: all 0.1s ease;
+            margin: 0 10px;
         }
         .form-btn:hover {
             color: #fff;
             box-shadow: 0px 0px 5px 2px #5B5B5B;
+        }
+        .btn-danger {
+            background-color: crimson;
+        }
+        .result {
+            margin: 30px 0;
+        }
+        .result table tr td:nth-child(2) {
+            background: rgba(0,0,0,0.1);
+        }
+        .product-info {
+            display: flex;
+            align-items: center;
+            height: 250px;
+            overflow: hidden;
         }
     </style>
 </head>
@@ -53,7 +72,7 @@
             <h1 class="app-title">WBVisor</h1>
         </div>
         <div class="app-content container">
-            <form action="" class="app-form" @submit.prevent="getHtml">
+            <form action="" class="app-form" @submit.prevent="getData">
                 <div class="form-group">
                     <label for="phrases">Запросы (каждый с новой строки)</label>
                     <textarea class="form-control" rows="5" id="phrases" v-model='form.phrases'></textarea>
@@ -63,17 +82,26 @@
                     <input type="text" id="vendor-code" class="form-control vendor-code" v-model='form.vendorCode'>
                 </div>
                 <div class="form-btn__wrap d-flex justify-content-center">
-                    <button class="form-btn btn" type="submit">Поиск</button>
+                    <button v-if="!result.product" class="form-btn btn" type="submit">Поиск</button><a v-if="result.product" @click="result = []" class="form-btn btn btn-danger" type="submit">Очистить</a>
                 </div>
             </form>
             <div v-if="loading">
                 <loader></loader>
             </div>
-            <div v-if="result.length">
-                <h2>Позиции</h2>
-                <table class="container" v-for="elem in result">
-                    <tr>
-                        <td>{{elem.phrase}}</td>
+            <div v-if="result.positions && result.product" class="result">
+                <div class="product-info">
+                    <div class="col-md-9 col-sm-12 p-0">
+                        <h3>Товар</h3>
+                        <b><a class="product-info__link" style="margin-top: 10px; font-size: 24px;" v-bind:href="result.product.url" target="_blank">{{result.product.title}}</a></b>
+                    </div>
+                    <div class="col-md-3 col-sm-12 p-0">
+                        <img v-bind:src="result.product.imageUrl" alt="" style="width: 100%;">
+                    </div>
+                </div>
+                <h4>Позиции</h4>
+                <table class="container">
+                    <tr v-for="elem in result.positions">
+                        <td><a v-bind:href="elem.link" target="_blank">{{elem.phrase}}</a></td>
                         <td>{{elem.position}}</td>
                     </tr>
                 </table>
