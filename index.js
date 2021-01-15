@@ -126,6 +126,8 @@ app.get('*', (req, res) => {
     res.sendFile(path.resolve(__dirname, 'client', 'index.html'))
 })
 
-app.listen(port, () => {
-    console.log(`App listening at http://localhost:${port}`)
-})
+app.listen(process.env.PORT || port)
+
+// app.listen(port, () => {
+//     console.log(`App listening at http://localhost:${port}`)
+// })
